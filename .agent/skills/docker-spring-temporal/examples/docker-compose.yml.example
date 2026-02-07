@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # The Application
+  app:
+    build: .
+    environment:
+      - SPRING_TEMPORAL_CONNECTION_TARGET=temporal:7233
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/myapp
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+    depends_on:
+      - temporal
+      - db
+    networks:
+      - app-network
+
+  # Temporal Server (Auto-setup for development)
+  temporal:
+    image: temporalio/auto-setup:1.24.0
+    ports:
+      - "7233:7233"
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - POSTGRES_SEEDS=db
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  # Temporal Web UI
+  temporal-ui:
+    image: temporalio/ui:2.27.0
+    ports:
+      - "8080:8080"
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    depends_on:
+      - temporal
+    networks:
+      - app-network
+
+  # Database for both App and Temporal (using separate schemas is better for prod)
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

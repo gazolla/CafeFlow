@@ -1,0 +1,25 @@
+# =============================================================================
+# Test profile — fast startup, minimal output, in-memory stores
+# =============================================================================
+
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  main:
+    banner-mode: off
+
+server:
+  port: 0  # random port for parallel test execution
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    root: WARN
+    com.example.app: INFO
