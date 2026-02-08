@@ -33,3 +33,19 @@ logging:
   level:
     io.temporal: INFO
     com.cafeflow: DEBUG
+
+telegram:
+  bot:
+    token: ${TELEGRAM_BOT_TOKEN:}
+
+twitter:
+  api:
+    bearer-token: ${X_BEARER_TOKEN:}
+    api-key: ${X_API_KEY:}
+    api-secret: ${X_API_SECRET:}
+
+google:
+  drive:
+    application-name: ${GD_APP_NAME:CafeFlow}
+    credentials-path: ${GD_CREDENTIALS_PATH:/credentials.json}
+    tokens-directory: ${GD_TOKENS_DIR:tokens}
