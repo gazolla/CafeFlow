@@ -1,5 +1,8 @@
 # CafeFlow Workflow Creator Skill
 
+> **MANDATORY**: Read `AGENTS.md` in the project root before generating any code.
+> It contains inviolable rules (Java records, Temporal determinism, .env config) that override any conflicting patterns.
+
 ## Purpose
 Guide AI to create complete, production-ready Temporal workflows in CafeFlow. This includes implementing new helpers when needed, following the BaseHelper pattern, and properly organizing workflow-specific vs. reusable helpers.
 
