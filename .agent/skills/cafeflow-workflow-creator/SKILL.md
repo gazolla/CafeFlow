@@ -647,6 +647,23 @@ public class WorkflowServiceHelper extends BaseHelper {
 }
 ```
 
+### Helper → Required Environment Variables
+
+When generating a workflow, identify ALL helpers used and their required variables:
+
+| Helper | Required Environment Variables | Notes |
+|--------|-------------------------------|-------|
+| RedditHelper | *(none)* | Public API, no credentials |
+| EmailHelper | `SMTP_USERNAME`, `SMTP_PASSWORD` | Optional: `SMTP_HOST`, `SMTP_PORT` |
+| TelegramHelper | `TELEGRAM_BOT_TOKEN` | From @BotFather |
+| TwitterHelper | `X_BEARER_TOKEN` | Optional: `X_API_KEY`, `X_API_SECRET` |
+| GDriveHelper | `GD_CREDENTIALS_PATH` | OAuth2 credentials JSON |
+| SlackHelper | `SLACK_WEBHOOK_URL` | Incoming Webhook |
+| GitHubHelper | `GITHUB_TOKEN` | Personal Access Token |
+| *All AI Helpers* | `GEMINI_API_KEY` **or** `GROQ_API_KEY` | At least one LLM provider |
+
+**AI Helpers that require LLM config**: TextSummarizerHelper, SentimentAnalyzerHelper, TextTranslatorHelper, ContentGeneratorHelper, DataExtractorHelper, TextClassifierHelper, TopicExtractorHelper.
+
 ### NEVER Ask Users For
 - ❌ SMTP server details (ask which email service, then you configure)
 - ❌ API endpoints (you look these up)
@@ -658,6 +675,51 @@ public class WorkflowServiceHelper extends BaseHelper {
 - ✅ Business data (email recipients, subreddit names)
 - ✅ Workflow logic (what to fetch, what to send)
 - ✅ API credentials via environment variables
+
+### Step 7: Generate Configuration Instructions
+
+After generating all code files, you MUST provide configuration instructions:
+
+1. **Identify all helpers used** in the workflow (from activities, imports, injections)
+2. **Look up required env vars** from the Helper → Required Environment Variables table above
+3. **Generate a `.env` snippet** with ONLY the variables this workflow needs
+4. **Include setup instructions** for each service (e.g., "Create Gmail App Password")
+
+**Output format** (include in your response after the code):
+
+```
+## Configuration
+
+Your workflow uses: [list helpers]
+
+Add these to your `.env` file (create from `.env.example` if it doesn't exist):
+
+\`\`\`env
+# === Required for this workflow ===
+GEMINI_API_KEY=your-google-ai-key
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+\`\`\`
+
+### Setup steps:
+1. **LLM (Gemini)**: Get API key from https://aistudio.google.com/apikey
+2. **Email (Gmail)**: Enable 2FA → Google Account > Security > App Passwords > Mail
+
+Then run:
+\`\`\`bash
+cp .env.example .env   # if first time
+# Edit .env with your values
+mvn spring-boot:run
+\`\`\`
+
+The ConfigurationValidator will confirm all helpers are ready on startup.
+```
+
+**Rules**:
+- NEVER generate env vars for helpers the workflow does NOT use
+- ALWAYS deduplicate: if 3 AI helpers are used, list LLM vars only ONCE
+- ALWAYS include the setup steps for services that need account creation (Gmail App Password, Telegram BotFather, etc.)
+- If the workflow only uses RedditHelper, explicitly say "No configuration needed"
 
 ---
 
@@ -745,13 +807,31 @@ I'll create a [purpose] workflow. Here's my analysis:
 - Creating workflow helper: [list with justification]
 - Creating framework helper: [list with justification]
 
-**Configuration Needed:**
-[List environment variables or application.yml settings]
-
 **Files to Create:**
 1. [List all files including helpers]
 
 [Then show code for each file]
+
+## Configuration
+
+Your workflow uses: [Helper1, Helper2, Helper3]
+
+Add these to your `.env` file:
+
+\`\`\`env
+# === Required for this workflow ===
+[ONLY the env vars needed by the helpers above]
+\`\`\`
+
+### Setup steps:
+[Numbered list with links to get each credential]
+
+Then run:
+\`\`\`bash
+cp .env.example .env   # if first time
+# Edit .env with your values
+mvn spring-boot:run
+\`\`\`
 ```
 
 ---
@@ -786,8 +866,10 @@ Before completing workflow:
 - [ ] All helpers extend BaseHelper
 - [ ] All helpers have @Component
 - [ ] Helper location correct (framework vs workflow)
-- [ ] Configuration documented (env vars or yml)
 - [ ] Maven dependencies added (if new libraries)
 - [ ] Worker configured in application.yml
 - [ ] No hardcoded secrets
 - [ ] Code compiles
+- [ ] `.env` snippet provided with ONLY the required variables for this workflow
+- [ ] Setup steps provided for each service requiring credentials
+- [ ] Configuration instructions reference `.env.example` as starting point

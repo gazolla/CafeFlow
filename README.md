@@ -136,6 +136,13 @@ docker-compose.yml                     # Temporal + PostgreSQL infrastructure
 | **RedditHelper** | Marketing | Ready | Fetch top posts from any subreddit |
 | **TwitterHelper** | Marketing | Ready | User lookup, post tweets (X API v2) |
 | **GDriveHelper** | Office | Ready | List, upload, download files (OAuth2) |
+| **TextSummarizerHelper** | AI | Ready | LLM-powered text summarization |
+| **SentimentAnalyzerHelper** | AI | Ready | LLM-powered sentiment analysis |
+| **TextTranslatorHelper** | AI | Ready | LLM-powered translation & language detection |
+| **ContentGeneratorHelper** | AI | Ready | Generate emails, social posts, reports, tweets |
+| **DataExtractorHelper** | AI | Ready | Extract fields, entities, key-values from text |
+| **TextClassifierHelper** | AI | Ready | Classify text into categories, yes/no questions |
+| **TopicExtractorHelper** | AI | Ready | Extract topics, hashtags, keywords |
 | DiscordHelper | Communication | TODO | - |
 | WhatsAppHelper | Communication | TODO | - |
 | FacebookHelper | Marketing | TODO | - |
@@ -304,18 +311,26 @@ See [QUICKSTART.md](QUICKSTART.md) for step-by-step setup instructions.
 # 1. Start infrastructure
 docker-compose up -d
 
-# 2. Set environment variables
-export SMTP_USERNAME=your-email@gmail.com
-export SMTP_PASSWORD=your-app-password
+# 2. Configure environment (first time)
+cp .env.example .env
+# Edit .env with your API keys and credentials
 
 # 3. Run the application
 mvn spring-boot:run
+# ConfigurationValidator will show which helpers are ready
 ```
 
 ## Environment Variables
 
+Configure via `.env` file (copy from `.env.example`). The `spring-dotenv` library loads it automatically.
+
 | Variable | Required | Description |
 |----------|----------|-------------|
+| `GEMINI_API_KEY` | Yes* | Google AI Studio key (for AI helpers) |
+| `GEMINI_MODEL` | No | Gemini model (default: `gemini-1.5-flash`) |
+| `GROQ_API_KEY` | Yes* | Groq API key (for AI helpers) |
+| `GROQ_MODEL` | No | Groq model (default: `llama-3.3-70b-versatile`) |
+| `LLM_DEFAULT_PROVIDER` | No | Default LLM provider: `gemini` or `groq` |
 | `SMTP_HOST` | No | SMTP server (default: `smtp.gmail.com`) |
 | `SMTP_PORT` | No | SMTP port (default: `587`) |
 | `SMTP_USERNAME` | Yes* | Email for SMTP authentication |
@@ -328,7 +343,7 @@ mvn spring-boot:run
 | `GD_CREDENTIALS_PATH` | No | Path to Google credentials JSON |
 | `GD_TOKENS_DIR` | No | Token storage directory (default: `tokens`) |
 
-*Required only if using the corresponding helper.
+*Required only if using the corresponding helper. AI helpers need at least one LLM provider (Gemini or Groq).
 
 ## License
 
@@ -474,6 +489,13 @@ docker-compose.yml                     # Infraestrutura Temporal + PostgreSQL
 | **RedditHelper** | Marketing | Pronto | Buscar top posts de qualquer subreddit |
 | **TwitterHelper** | Marketing | Pronto | Busca de usuario, postar tweets (X API v2) |
 | **GDriveHelper** | Office | Pronto | Listar, upload, download de arquivos (OAuth2) |
+| **TextSummarizerHelper** | IA | Pronto | Resumo de texto com LLM |
+| **SentimentAnalyzerHelper** | IA | Pronto | Analise de sentimento com LLM |
+| **TextTranslatorHelper** | IA | Pronto | Traducao e deteccao de idioma com LLM |
+| **ContentGeneratorHelper** | IA | Pronto | Gerar emails, posts sociais, relatorios, tweets |
+| **DataExtractorHelper** | IA | Pronto | Extrair campos, entidades, chave-valor de texto |
+| **TextClassifierHelper** | IA | Pronto | Classificar texto em categorias, perguntas sim/nao |
+| **TopicExtractorHelper** | IA | Pronto | Extrair topicos, hashtags, palavras-chave |
 | DiscordHelper | Comunicacao | TODO | - |
 | WhatsAppHelper | Comunicacao | TODO | - |
 | FacebookHelper | Marketing | TODO | - |
@@ -642,18 +664,26 @@ Veja [QUICKSTART.md](QUICKSTART.md) para instrucoes passo a passo.
 # 1. Iniciar infraestrutura
 docker-compose up -d
 
-# 2. Configurar variaveis de ambiente
-export SMTP_USERNAME=seu-email@gmail.com
-export SMTP_PASSWORD=sua-senha-de-app
+# 2. Configurar ambiente (primeira vez)
+cp .env.example .env
+# Edite o .env com suas API keys e credenciais
 
 # 3. Executar a aplicacao
 mvn spring-boot:run
+# O ConfigurationValidator mostra quais helpers estao prontos
 ```
 
 ## Variaveis de Ambiente
 
+Configure via arquivo `.env` (copie do `.env.example`). A biblioteca `spring-dotenv` carrega automaticamente.
+
 | Variavel | Obrigatoria | Descricao |
 |----------|-------------|-----------|
+| `GEMINI_API_KEY` | Sim* | Chave do Google AI Studio (para helpers de IA) |
+| `GEMINI_MODEL` | Nao | Modelo Gemini (padrao: `gemini-1.5-flash`) |
+| `GROQ_API_KEY` | Sim* | Chave da API Groq (para helpers de IA) |
+| `GROQ_MODEL` | Nao | Modelo Groq (padrao: `llama-3.3-70b-versatile`) |
+| `LLM_DEFAULT_PROVIDER` | Nao | Provedor LLM padrao: `gemini` ou `groq` |
 | `SMTP_HOST` | Nao | Servidor SMTP (padrao: `smtp.gmail.com`) |
 | `SMTP_PORT` | Nao | Porta SMTP (padrao: `587`) |
 | `SMTP_USERNAME` | Sim* | Email para autenticacao SMTP |
@@ -666,7 +696,7 @@ mvn spring-boot:run
 | `GD_CREDENTIALS_PATH` | Nao | Caminho para o JSON de credenciais Google |
 | `GD_TOKENS_DIR` | Nao | Diretorio de armazenamento de tokens (padrao: `tokens`) |
 
-*Obrigatoria apenas se usar o helper correspondente.
+*Obrigatoria apenas se usar o helper correspondente. Helpers de IA precisam de pelo menos um provedor LLM (Gemini ou Groq).
 
 ## Licenca
 

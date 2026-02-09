@@ -82,30 +82,35 @@ The project also includes `official_postgres.yml`, an alternative Docker Compose
 
 ## Step 3: Configure Environment
 
-Create a `.env` file in the project root or export variables in your terminal:
+CafeFlow uses `spring-dotenv` to automatically load a `.env` file from the project root. Start from the template:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` and **uncomment only the variables your workflow needs**:
 
 ```env
-# Email (required for EmailHelper)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
+# === LLM / AI Helpers ===
+# At least one provider required for AI helpers (summarize, translate, classify, etc.)
+GEMINI_API_KEY=your-google-ai-key
+# GROQ_API_KEY=your-groq-key
+
+# === Email (SMTP) ===
 SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
 
-# Telegram (required for TelegramHelper)
-TELEGRAM_BOT_TOKEN=your-bot-token
+# === Telegram ===
+# TELEGRAM_BOT_TOKEN=your-bot-token
 
-# Twitter/X (required for TwitterHelper)
-X_BEARER_TOKEN=your-bearer-token
-X_API_KEY=your-api-key
-X_API_SECRET=your-api-secret
+# === Twitter/X ===
+# X_BEARER_TOKEN=your-bearer-token
 
-# Google Drive (required for GDriveHelper)
-GD_APP_NAME=CafeFlow
-GD_CREDENTIALS_PATH=/credentials.json
-GD_TOKENS_DIR=tokens
+# === Google Drive ===
+# GD_CREDENTIALS_PATH=/credentials.json
 ```
 
-Only configure the variables for the helpers you plan to use.
+Only configure the variables for the helpers your workflow uses. The `ConfigurationValidator` will tell you on startup which helpers are ready and which are missing configuration.
 
 ### Gmail App Password
 
@@ -121,11 +126,20 @@ To use Gmail as SMTP provider:
 mvn spring-boot:run
 ```
 
-You should see:
+On startup, the `ConfigurationValidator` prints a report showing which helpers are ready:
 
 ```
-CafeFlow started successfully!
+╔══════════════════════════════════════════════════════════════════╗
+║              CafeFlow Configuration Report                      ║
+╠══════════════════════════════════════════════════════════════════╣
+║ ✅ RedditHelper         — ready (no config needed)              ║
+║ ✅ EmailHelper          — ready                                 ║
+║ ✅ TextSummarizerHelper — ready                                 ║
+║ ⬚  SlackHelper          — not active                           ║
+╚══════════════════════════════════════════════════════════════════╝
 ```
+
+If any helper shows ⚠️ MISSING, edit your `.env` file and restart.
 
 ## Step 5: Create Workflows with Google Antigravity
 
@@ -412,30 +426,35 @@ O projeto tambem inclui o `official_postgres.yml`, um Docker Compose alternativo
 
 ## Passo 3: Configurar Ambiente
 
-Crie um arquivo `.env` na raiz do projeto ou exporte as variaveis no terminal:
+O CafeFlow usa `spring-dotenv` para carregar automaticamente um arquivo `.env` da raiz do projeto. Comece pelo template:
+
+```bash
+cp .env.example .env
+```
+
+Depois edite o `.env` e **descomente apenas as variaveis que seu workflow precisa**:
 
 ```env
-# Email (obrigatorio para EmailHelper)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
+# === LLM / Helpers de IA ===
+# Pelo menos um provedor necessario para helpers de IA (resumir, traduzir, classificar, etc.)
+GEMINI_API_KEY=sua-chave-google-ai
+# GROQ_API_KEY=sua-chave-groq
+
+# === Email (SMTP) ===
 SMTP_USERNAME=seu-email@gmail.com
 SMTP_PASSWORD=sua-senha-de-app
 
-# Telegram (obrigatorio para TelegramHelper)
-TELEGRAM_BOT_TOKEN=seu-token-do-bot
+# === Telegram ===
+# TELEGRAM_BOT_TOKEN=seu-token-do-bot
 
-# Twitter/X (obrigatorio para TwitterHelper)
-X_BEARER_TOKEN=seu-bearer-token
-X_API_KEY=sua-api-key
-X_API_SECRET=seu-api-secret
+# === Twitter/X ===
+# X_BEARER_TOKEN=seu-bearer-token
 
-# Google Drive (obrigatorio para GDriveHelper)
-GD_APP_NAME=CafeFlow
-GD_CREDENTIALS_PATH=/credentials.json
-GD_TOKENS_DIR=tokens
+# === Google Drive ===
+# GD_CREDENTIALS_PATH=/credentials.json
 ```
 
-Configure apenas as variaveis dos helpers que voce pretende usar.
+Configure apenas as variaveis dos helpers que seu workflow usa. O `ConfigurationValidator` informa no startup quais helpers estao prontos e quais estao faltando configuracao.
 
 ### Senha de App do Gmail
 
@@ -451,11 +470,20 @@ Para usar Gmail como provedor SMTP:
 mvn spring-boot:run
 ```
 
-Voce deve ver:
+No startup, o `ConfigurationValidator` imprime um relatorio mostrando quais helpers estao prontos:
 
 ```
-CafeFlow started successfully!
+╔══════════════════════════════════════════════════════════════════╗
+║              CafeFlow Configuration Report                      ║
+╠══════════════════════════════════════════════════════════════════╣
+║ ✅ RedditHelper         — ready (no config needed)              ║
+║ ✅ EmailHelper          — ready                                 ║
+║ ✅ TextSummarizerHelper — ready                                 ║
+║ ⬚  SlackHelper          — not active                           ║
+╚══════════════════════════════════════════════════════════════════╝
 ```
+
+Se algum helper mostrar ⚠️ MISSING, edite seu arquivo `.env` e reinicie.
 
 ## Passo 5: Criar Workflows com o Google Antigravity
 

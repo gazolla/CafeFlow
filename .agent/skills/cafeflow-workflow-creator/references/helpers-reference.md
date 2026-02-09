@@ -898,3 +898,93 @@ public class MyActivitiesImpl {
 | Need LLM in one workflow only | Create workflow helper extending BaseHelper + inject LLMClient | `workflows/[name]/helpers/` |
 
 **Need custom API?** → Workflow helper if single-use, framework if reusable
+
+---
+
+## Configuration & Environment Variables
+
+### How Configuration Works in CafeFlow
+
+CafeFlow uses a 3-layer configuration strategy:
+
+1. **`.env.example`** — Template with ALL possible variables (committed to git)
+2. **`.env`** — User's actual values (NOT committed, in `.gitignore`)
+3. **`ConfigurationValidator`** — Spring component that validates config on startup
+
+### Setup Flow
+
+```bash
+# 1. Copy template (first time only)
+cp .env.example .env
+
+# 2. Edit .env — uncomment and fill ONLY the variables your workflow needs
+#    (The .env.example has comments explaining each variable)
+
+# 3. Run — spring-dotenv loads .env automatically
+mvn spring-boot:run
+
+# 4. Check startup log for ConfigurationValidator report:
+#    ✅ RedditHelper         — ready
+#    ✅ EmailHelper          — ready
+#    ⚠️ TextSummarizerHelper — MISSING: GEMINI_API_KEY or GROQ_API_KEY
+```
+
+### Complete Variable Reference
+
+| Variable | Helper(s) | Required | Default | Notes |
+|----------|-----------|----------|---------|-------|
+| `GEMINI_API_KEY` | All AI Helpers | Yes* | *(none)* | Google AI Studio key |
+| `GEMINI_MODEL` | All AI Helpers | No | `gemini-1.5-flash` | Model override |
+| `GROQ_API_KEY` | All AI Helpers | Yes* | *(none)* | Groq console key |
+| `GROQ_MODEL` | All AI Helpers | No | `llama-3.3-70b-versatile` | Model override |
+| `LLM_DEFAULT_PROVIDER` | All AI Helpers | No | `gemini` | `gemini` or `groq` |
+| `SMTP_HOST` | EmailHelper | No | `smtp.gmail.com` | SMTP server host |
+| `SMTP_PORT` | EmailHelper | No | `587` | SMTP server port |
+| `SMTP_USERNAME` | EmailHelper | Yes | *(none)* | Email address |
+| `SMTP_PASSWORD` | EmailHelper | Yes | *(none)* | App password |
+| `TELEGRAM_BOT_TOKEN` | TelegramHelper | Yes | *(none)* | From @BotFather |
+| `X_BEARER_TOKEN` | TwitterHelper | Yes | *(none)* | X/Twitter API |
+| `X_API_KEY` | TwitterHelper | Yes | *(none)* | X/Twitter API |
+| `X_API_SECRET` | TwitterHelper | Yes | *(none)* | X/Twitter API |
+| `GD_APP_NAME` | GDriveHelper | No | `CafeFlow` | App name |
+| `GD_CREDENTIALS_PATH` | GDriveHelper | Yes | `/credentials.json` | OAuth2 JSON |
+| `GD_TOKENS_DIR` | GDriveHelper | No | `tokens` | Token storage |
+| `SLACK_WEBHOOK_URL` | SlackHelper | Yes | *(none)* | Incoming Webhook |
+| `GITHUB_TOKEN` | GitHubHelper | Yes | *(none)* | PAT token |
+
+*\*At least one LLM provider (Gemini or Groq) must be configured for AI helpers to work.*
+
+### spring-dotenv
+
+CafeFlow uses `spring-dotenv` to automatically load `.env` files. No manual `export` needed:
+
+```xml
+<!-- Already in pom.xml -->
+<dependency>
+    <groupId>me.paulschwarz</groupId>
+    <artifactId>spring-dotenv</artifactId>
+    <version>4.0.0</version>
+</dependency>
+```
+
+Just place a `.env` file in the project root and Spring Boot reads it automatically on startup.
+
+### ConfigurationValidator
+
+On startup, `ConfigurationValidator` scans all active helper beans and prints a report:
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║              CafeFlow Configuration Report                      ║
+╠══════════════════════════════════════════════════════════════════╣
+║ ✅ RedditHelper         — ready (no config needed)              ║
+║ ✅ EmailHelper          — ready                                 ║
+║ ⚠️ TextSummarizerHelper — MISSING: GEMINI_API_KEY|GROQ_API_KEY  ║
+║ ⬚  SlackHelper          — not active                           ║
+╚══════════════════════════════════════════════════════════════════╝
+  💡 Tip: Copy .env.example to .env and configure the missing variables.
+```
+
+- **✅ ready** — Helper bean exists and all required vars are configured
+- **⚠️ MISSING** — Helper bean exists but required vars are missing (will fail at runtime)
+- **⬚ not active** — Helper bean not loaded (no workflow uses it)
