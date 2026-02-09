@@ -52,6 +52,16 @@ ALL helpers (framework and workflow) MUST:
 - Use `executeWithProtection()` for all I/O operations
 - Have `@Component` annotation (for dependency injection)
 
+### 5. LLM Integration Layer
+**IMPORTANT**: The `core.llm` package provides AI capabilities as infrastructure.
+- `LLMClient` is registered as a Spring bean via `LLMConfig` (`@Configuration`)
+- Helpers in `helpers/ai/` wrap `LLMClient` with BaseHelper protection
+- **NEVER** call `LLMClient` directly in workflows or activities — always use AI helpers
+- AI helpers can be composed with ANY other helper (Reddit + Summarizer + Email)
+- At least one LLM API key (`GEMINI_API_KEY` or `GROQ_API_KEY`) must be set for AI helpers to work
+- The default provider is configured via `llm.default-provider` in `application.yml` (default: `gemini`)
+- Available providers: Google Gemini (`gemini-1.5-flash`) and Groq (`llama-3.3-70b-versatile`)
+
 ---
 
 ## Project Structure
@@ -67,6 +77,10 @@ src/main/java/com/cafeflow/
 │       └── HelperException.java
 │
 ├── helpers/                                     # FRAMEWORK helpers (reusable)
+│   ├── ai/
+│   │   ├── TextSummarizerHelper.java           # LLM-powered text summarization
+│   │   ├── SentimentAnalyzerHelper.java        # LLM-powered sentiment analysis
+│   │   └── SentimentResult.java                # Sentiment result record
 │   ├── communication/
 │   │   ├── EmailHelper.java                    # Generic SMTP (requires config)
 │   │   └── SlackHelper.java                    # Skeleton (implement if needed)
@@ -104,6 +118,53 @@ src/main/java/com/cafeflow/
 - Generic SMTP helper
 - **User MUST configure**: SMTP host, port, username, password
 - Used when multiple workflows need email with SAME SMTP server
+
+### AI Helpers (LLM-powered)
+
+**TextSummarizerHelper** (`helpers/ai/`):
+- Requires: LLM API key configured (Gemini or Groq)
+- Methods: `summarize(text)`, `summarize(text, maxSentences)`, `summarizeBatch(texts)`, `summarizeToLanguage(text, language)`
+- Use when: Workflow needs to summarize posts, articles, emails, documents
+- Configuration: `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+**SentimentAnalyzerHelper** (`helpers/ai/`):
+- Requires: LLM API key configured (Gemini or Groq)
+- Methods: `analyze(text)`, `analyzeBatch(texts)`, `classifySimple(text)`
+- Returns: `SentimentResult` record with `sentiment` (positive/negative/neutral), `confidence` (0.0-1.0), `explanation`
+- Use when: Workflow needs to classify sentiment, filter by mood, detect negativity
+- Configuration: `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+**TextTranslatorHelper** (`helpers/ai/`):
+- Requires: LLM API key configured (Gemini or Groq)
+- Methods: `translate(text, targetLanguage)`, `translate(text, source, target)`, `translateBatch(texts, targetLanguage)`, `detectLanguage(text)`
+- Use when: Workflow needs to translate content between languages or detect source language
+- Configuration: `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+**ContentGeneratorHelper** (`helpers/ai/`):
+- Requires: LLM API key configured (Gemini or Groq)
+- Methods: `generate(instruction)`, `generateEmail(topic, recipientContext, keyPoints)`, `generateSocialPost(platform, topic, tone)`, `generateTweet(content)`, `generateReport(title, dataPoints)`, `rewriteInTone(text, tone)`
+- Use when: Workflow needs to create emails, social posts, tweets, reports, or rewrite content
+- Configuration: `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+**DataExtractorHelper** (`helpers/ai/`):
+- Requires: LLM API key configured (Gemini or Groq)
+- Methods: `extractFields(text, fieldNames)`, `extractEntities(text)`, `extractKeyValues(text)`, `extractActionItems(text)`
+- Returns: `ExtractionResult` record with `fields` (Map), `entities` (List), `confidence`
+- Use when: Workflow needs to parse unstructured text into structured data (invoices, emails, meeting notes)
+- Configuration: `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+**TextClassifierHelper** (`helpers/ai/`):
+- Requires: LLM API key configured (Gemini or Groq)
+- Methods: `classify(text, categories)`, `classifyBatch(texts, categories)`, `classifySimple(text, categories)`, `classifyBoolean(text, question)`, `matchesCriteria(text, criteria)`
+- Returns: `ClassificationResult` record with `category`, `confidence`, `reasoning`
+- Use when: Workflow needs to categorize content, filter by criteria, or answer yes/no questions about text
+- Configuration: `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+**TopicExtractorHelper** (`helpers/ai/`):
+- Requires: LLM API key configured (Gemini or Groq)
+- Methods: `extractTopics(text)`, `extractTopicsBatch(texts)`, `generateHashtags(text, max)`, `extractKeywords(text, max)`, `generateTopicLabel(text)`
+- Use when: Workflow needs to tag content, generate hashtags, extract keywords, or auto-label topics
+- Configuration: `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
 
 ### Skeletons (Need Implementation)
 - SlackHelper
@@ -165,6 +226,9 @@ Q3: Is there a skeleton?
 | Slack | Yes (skeleton) | Multiple workflows | Implement SlackHelper |
 | Stripe | No | Only payment workflow | Create WorkflowHelper |
 | Notion | No | Multiple workflows will use | Create FrameworkHelper |
+| Text summarization | Yes (AI helper) | - | ✅ Use TextSummarizerHelper |
+| Sentiment analysis | Yes (AI helper) | - | ✅ Use SentimentAnalyzerHelper |
+| Custom LLM behavior | No | Only this workflow | Create workflow helper injecting LLMClient |
 
 ### Step 3: Create/Implement Helpers
 
@@ -541,6 +605,13 @@ When creating ANY helper (framework or workflow), ensure:
 - [ ] No hardcoded credentials
 - [ ] Proper package location (helpers/ vs workflows/[name]/helpers/)
 
+### AI Helper Checklist (additional)
+- [ ] Injects `LLMClient` (not creates manually)
+- [ ] Prompt engineering is clear and specific
+- [ ] Handles LLM response parsing errors gracefully
+- [ ] Falls back to sensible default on failure
+- [ ] Does NOT expose raw LLM responses to workflows
+
 ---
 
 ## Configuration Rules
@@ -629,6 +700,30 @@ User: "Create Notion page" (+ future workflows will use Notion)
 Helpers: None (but will be reused)
 Action: Create NotionHelper in helpers/productivity/
 Files: NotionHelper + Workflow + Activities
+```
+
+### Pattern 6: LLM-Enhanced Workflow
+```
+User: "Summarize Reddit posts before sending email"
+Helpers: RedditHelper (exists) + TextSummarizerHelper (exists) + EmailHelper (needs config)
+Action: Compose all three in activities — fetch → summarize → send
+Files: Workflow + Activities (no new helpers needed)
+```
+
+### Pattern 7: Sentiment-Filtered Workflow
+```
+User: "Monitor Reddit and alert only on negative posts"
+Helpers: RedditHelper + SentimentAnalyzerHelper + TelegramHelper
+Action: Fetch → Analyze sentiment → Filter negative → Send alert
+Files: Workflow + Activities (no new helpers needed)
+```
+
+### Pattern 8: Multi-Language Workflow
+```
+User: "Summarize posts in Portuguese and send to Telegram"
+Helpers: RedditHelper + TextSummarizerHelper (summarizeToLanguage) + TelegramHelper
+Action: Fetch → Summarize to pt-BR → Send
+Files: Workflow + Activities (no new helpers needed)
 ```
 
 ---

@@ -528,4 +528,373 @@ public class SlackNotifier extends BaseHelper {
 
 **Need Notion?** → Create framework helper (helpers/productivity/) if reusable
 
+**Need text summarization?** → Use TextSummarizerHelper (requires LLM API key)
+
+**Need sentiment analysis?** → Use SentimentAnalyzerHelper (requires LLM API key)
+
+**Need translation?** → Use TextTranslatorHelper (requires LLM API key)
+
+**Need content generation (emails, posts, reports)?** → Use ContentGeneratorHelper (requires LLM API key)
+
+**Need data extraction (fields, entities, key-values)?** → Use DataExtractorHelper (requires LLM API key)
+
+**Need text classification / filtering?** → Use TextClassifierHelper (requires LLM API key)
+
+**Need topics, hashtags, keywords?** → Use TopicExtractorHelper (requires LLM API key)
+
+**Need custom AI behavior?** → Create new AI helper in helpers/ai/ injecting LLMClient
+
+---
+
+### AI Helpers (LLM-Powered)
+
+#### TextSummarizerHelper
+**Location**: `helpers/ai/TextSummarizerHelper.java`
+
+**Status**: Fully implemented - requires LLM API key (`GEMINI_API_KEY` or `GROQ_API_KEY`)
+
+**Methods**:
+```java
+String summarize(String text)
+String summarize(String text, int maxSentences)
+List<String> summarizeBatch(List<String> texts)
+String summarizeToLanguage(String text, String targetLanguage)
+```
+
+**Example**:
+```java
+@RequiredArgsConstructor
+public class MyActivitiesImpl {
+    private final RedditHelper redditHelper;
+    private final TextSummarizerHelper summarizerHelper;
+    private final EmailHelper emailHelper;
+
+    public void fetchAndSummarize() {
+        List<RedditPost> posts = redditHelper.fetchTopPosts("java", 5, RedditPost.class);
+        List<String> titles = posts.stream().map(RedditPost::title).toList();
+        List<String> summaries = summarizerHelper.summarizeBatch(titles);
+        emailHelper.sendTextEmail("user@email.com", "Daily Digest", String.join("\n\n", summaries));
+    }
+}
+```
+
+**Configuration**: Set `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+---
+
+#### SentimentAnalyzerHelper
+**Location**: `helpers/ai/SentimentAnalyzerHelper.java`
+
+**Status**: Fully implemented - requires LLM API key (`GEMINI_API_KEY` or `GROQ_API_KEY`)
+
+**Methods**:
+```java
+SentimentResult analyze(String text)
+List<SentimentResult> analyzeBatch(List<String> texts)
+String classifySimple(String text)
+```
+
+**SentimentResult record**:
+```java
+record SentimentResult(String sentiment, double confidence, String explanation)
+// sentiment: "positive", "negative", "neutral", or "unknown" on parse failure
+// confidence: 0.0 to 1.0
+// explanation: brief one-sentence reason
+```
+
+**Example**:
+```java
+@RequiredArgsConstructor
+public class MyActivitiesImpl {
+    private final RedditHelper redditHelper;
+    private final SentimentAnalyzerHelper sentimentHelper;
+    private final TelegramHelper telegramHelper;
+
+    public void alertOnNegative() {
+        List<RedditPost> posts = redditHelper.fetchTopPosts("product", 10, RedditPost.class);
+        for (RedditPost post : posts) {
+            SentimentResult result = sentimentHelper.analyze(post.title());
+            if ("negative".equals(result.sentiment()) && result.confidence() > 0.7) {
+                telegramHelper.sendNotification("CHAT_ID",
+                    "Warning: Negative post detected: " + post.title() + "\n" + result.explanation());
+            }
+        }
+    }
+}
+```
+
+**Configuration**: Set `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+---
+
+#### TextTranslatorHelper
+**Location**: `helpers/ai/TextTranslatorHelper.java`
+
+**Status**: Fully implemented - requires LLM API key (`GEMINI_API_KEY` or `GROQ_API_KEY`)
+
+**Methods**:
+```java
+String translate(String text, String targetLanguage)
+String translate(String text, String sourceLanguage, String targetLanguage)
+List<String> translateBatch(List<String> texts, String targetLanguage)
+String detectLanguage(String text)
+```
+
+**Example**:
+```java
+@RequiredArgsConstructor
+public class MyActivitiesImpl {
+    private final RedditHelper redditHelper;
+    private final TextTranslatorHelper translatorHelper;
+    private final EmailHelper emailHelper;
+
+    public void fetchAndTranslate() {
+        List<RedditPost> posts = redditHelper.fetchTopPosts("technology", 5, RedditPost.class);
+        List<String> titles = posts.stream().map(RedditPost::title).toList();
+        List<String> translated = translatorHelper.translateBatch(titles, "Portuguese");
+        emailHelper.sendTextEmail("user@email.com", "Tech News PT-BR", String.join("\n", translated));
+    }
+}
+```
+
+**Use Cases**:
+- Multi-language content workflows (translate before send)
+- Language detection for routing (detect → translate → deliver)
+- Bilingual newsletter generation
+
+**Configuration**: Set `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+---
+
+#### ContentGeneratorHelper
+**Location**: `helpers/ai/ContentGeneratorHelper.java`
+
+**Status**: Fully implemented - requires LLM API key (`GEMINI_API_KEY` or `GROQ_API_KEY`)
+
+**Methods**:
+```java
+String generate(String instruction)
+String generateEmail(String topic, String recipientContext, List<String> keyPoints)
+String generateSocialPost(String platform, String topic, String tone)
+String generateTweet(String content)          // enforces 280 char limit
+String generateReport(String title, List<String> dataPoints)
+String rewriteInTone(String text, String tone)
+```
+
+**Example**:
+```java
+@RequiredArgsConstructor
+public class MyActivitiesImpl {
+    private final RedditHelper redditHelper;
+    private final ContentGeneratorHelper contentGenerator;
+    private final EmailHelper emailHelper;
+
+    public void weeklyDigest() {
+        List<RedditPost> posts = redditHelper.fetchTopPosts("java", 10, RedditPost.class);
+        List<String> dataPoints = posts.stream()
+            .map(p -> p.title() + " (" + p.score() + " upvotes)")
+            .toList();
+        String report = contentGenerator.generateReport("Weekly Java Trends", dataPoints);
+        emailHelper.sendTextEmail("team@company.com", "Weekly Java Report", report);
+    }
+
+    public void socialMediaAutomation() {
+        String tweet = contentGenerator.generateTweet("New blog post about Spring Boot 3.2 features");
+        String linkedIn = contentGenerator.generateSocialPost("LinkedIn", "Spring Boot 3.2", "professional");
+        // Post to respective platforms...
+    }
+}
+```
+
+**Tone Options for `rewriteInTone()`**: `"formal"`, `"casual"`, `"professional"`, `"friendly"`, `"technical"`, etc.
+
+**Configuration**: Set `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+---
+
+#### DataExtractorHelper
+**Location**: `helpers/ai/DataExtractorHelper.java`
+
+**Status**: Fully implemented - requires LLM API key (`GEMINI_API_KEY` or `GROQ_API_KEY`)
+
+**Methods**:
+```java
+ExtractionResult extractFields(String text, List<String> fieldNames)
+List<String> extractEntities(String text)
+Map<String, String> extractKeyValues(String text)
+List<String> extractActionItems(String text)
+```
+
+**ExtractionResult record**:
+```java
+record ExtractionResult(
+    Map<String, String> fields,    // requested field name → extracted value (empty string if not found)
+    List<String> entities,         // named entities found: people, orgs, locations, dates
+    double confidence)             // 0.0 to 1.0
+```
+
+**Example**:
+```java
+@RequiredArgsConstructor
+public class MyActivitiesImpl {
+    private final DataExtractorHelper dataExtractor;
+    private final EmailHelper emailHelper;
+
+    public void processInvoice(String invoiceText) {
+        // Extract specific fields
+        ExtractionResult result = dataExtractor.extractFields(
+            invoiceText,
+            List.of("vendor_name", "invoice_number", "total_amount", "due_date")
+        );
+        String vendor = result.fields().get("vendor_name");
+        String amount = result.fields().get("total_amount");
+
+        // Extract key-value pairs (auto-detect)
+        Map<String, String> allData = dataExtractor.extractKeyValues(invoiceText);
+
+        // Extract action items from meeting notes
+        List<String> todos = dataExtractor.extractActionItems(meetingNotes);
+    }
+}
+```
+
+**Use Cases**:
+- Invoice/receipt parsing workflows
+- Meeting notes → action items extraction
+- Form data extraction from unstructured text
+- Named entity recognition (people, orgs, locations)
+
+**Configuration**: Set `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+---
+
+#### TextClassifierHelper
+**Location**: `helpers/ai/TextClassifierHelper.java`
+
+**Status**: Fully implemented - requires LLM API key (`GEMINI_API_KEY` or `GROQ_API_KEY`)
+
+**Methods**:
+```java
+ClassificationResult classify(String text, List<String> categories)
+List<ClassificationResult> classifyBatch(List<String> texts, List<String> categories)
+String classifySimple(String text, List<String> categories)
+boolean classifyBoolean(String text, String question)
+boolean matchesCriteria(String text, String criteria)
+```
+
+**ClassificationResult record**:
+```java
+record ClassificationResult(
+    String category,     // chosen category (or "unknown" on parse failure)
+    double confidence,   // 0.0 to 1.0
+    String reasoning)    // brief one-sentence explanation
+```
+
+**Example**:
+```java
+@RequiredArgsConstructor
+public class MyActivitiesImpl {
+    private final RedditHelper redditHelper;
+    private final TextClassifierHelper classifierHelper;
+    private final SlackHelper slackHelper;
+
+    public void routeByCategory() {
+        List<RedditPost> posts = redditHelper.fetchTopPosts("technology", 20, RedditPost.class);
+        List<String> categories = List.of("AI/ML", "Security", "DevOps", "Frontend", "Backend");
+
+        for (RedditPost post : posts) {
+            ClassificationResult result = classifierHelper.classify(post.title(), categories);
+            if (result.confidence() > 0.7) {
+                slackHelper.sendMessage("#" + result.category().toLowerCase(), post.title());
+            }
+        }
+    }
+
+    public void filterContent() {
+        // Binary classification
+        boolean isUrgent = classifierHelper.classifyBoolean(emailBody, "Is this email urgent?");
+        boolean matchesTech = classifierHelper.matchesCriteria(article, "related to cloud computing");
+    }
+}
+```
+
+**Use Cases**:
+- Content routing to different channels based on category
+- Spam/relevance filtering in pipelines
+- Binary yes/no decisions (urgent, relevant, actionable)
+- Criteria-based content filtering
+
+**Configuration**: Set `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+---
+
+#### TopicExtractorHelper
+**Location**: `helpers/ai/TopicExtractorHelper.java`
+
+**Status**: Fully implemented - requires LLM API key (`GEMINI_API_KEY` or `GROQ_API_KEY`)
+
+**Methods**:
+```java
+List<String> extractTopics(String text)
+List<List<String>> extractTopicsBatch(List<String> texts)
+List<String> generateHashtags(String text, int maxHashtags)
+List<String> extractKeywords(String text, int maxKeywords)
+String generateTopicLabel(String text)
+```
+
+**Example**:
+```java
+@RequiredArgsConstructor
+public class MyActivitiesImpl {
+    private final RedditHelper redditHelper;
+    private final TopicExtractorHelper topicExtractor;
+    private final ContentGeneratorHelper contentGenerator;
+
+    public void tagAndPublish() {
+        List<RedditPost> posts = redditHelper.fetchTopPosts("machinelearning", 5, RedditPost.class);
+        for (RedditPost post : posts) {
+            // Extract topics for categorization
+            List<String> topics = topicExtractor.extractTopics(post.title());
+
+            // Generate hashtags for social media
+            List<String> hashtags = topicExtractor.generateHashtags(post.title(), 5);
+
+            // Generate a single topic label
+            String label = topicExtractor.generateTopicLabel(post.title());
+
+            // Extract SEO keywords
+            List<String> keywords = topicExtractor.extractKeywords(post.title(), 10);
+
+            // Use in content generation
+            String socialPost = contentGenerator.generateSocialPost(
+                "Twitter", post.title(), "informative") + "\n" + String.join(" ", hashtags);
+        }
+    }
+}
+```
+
+**Use Cases**:
+- Auto-tagging content for categorization
+- SEO keyword extraction for blog/article workflows
+- Hashtag generation for social media automation
+- Topic-based content routing and filtering
+
+**Configuration**: Set `GEMINI_API_KEY` or `GROQ_API_KEY` environment variable
+
+---
+
+### Decision Matrix — AI Helpers
+
+| Situation | Strategy | Helper |
+|-----------|----------|--------|
+| Need to summarize text | Use TextSummarizerHelper | `helpers/ai/TextSummarizerHelper` |
+| Need sentiment analysis | Use SentimentAnalyzerHelper | `helpers/ai/SentimentAnalyzerHelper` |
+| Need translation / language detection | Use TextTranslatorHelper | `helpers/ai/TextTranslatorHelper` |
+| Need email/social/report generation | Use ContentGeneratorHelper | `helpers/ai/ContentGeneratorHelper` |
+| Need to extract fields/entities from text | Use DataExtractorHelper | `helpers/ai/DataExtractorHelper` |
+| Need to classify text into categories | Use TextClassifierHelper | `helpers/ai/TextClassifierHelper` |
+| Need topics/hashtags/keywords | Use TopicExtractorHelper | `helpers/ai/TopicExtractorHelper` |
+| Need custom LLM behavior | Create new AI helper in `helpers/ai/` injecting LLMClient | Custom |
+| Need LLM in one workflow only | Create workflow helper extending BaseHelper + inject LLMClient | `workflows/[name]/helpers/` |
+
 **Need custom API?** → Workflow helper if single-use, framework if reusable
