@@ -19,13 +19,17 @@ Skill triggers:
 - Constructor injection via `@RequiredArgsConstructor`. Never field injection (`@Autowired`).
 
 ```java
-// CORRECT
+// CORRECT — this project uses Java records for ALL DTOs. Zero exceptions.
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record RedditPost(String title, @JsonProperty("url") String link, int ups) {}
+public record RedditPost(
+        String title,
+        @JsonProperty("selftext") String selfText,
+        @JsonProperty("url") String link,
+        int ups,
+        String author) {}
 
-// WRONG — never do this
-@Data
-public class RedditPost { private String title; ... }
+// WRONG — Lombok @Data is BANNED in this project. Zero exceptions.
+// @Data public class RedditPost { ... }
 ```
 
 ## Temporal Rules
@@ -71,6 +75,13 @@ public class MyActivitiesImpl implements MyActivities {
 - AI helpers inject `LLMClient` via constructor
 - Helpers are NOT pre-configured — each requires environment variables
 
+## Execution Rules
+
+- NEVER auto-run the application (`mvn spring-boot:run`, `docker-compose up`, etc.)
+- ONLY generate code and configuration files
+- Let the user start Docker and run the application manually
+- Verify with `mvn compile` at most — never `mvn spring-boot:run`
+
 ## Configuration Rules
 
 - NEVER hardcode secrets. Use `${ENV_VAR:default}` in `application.yml`.
@@ -106,11 +117,11 @@ src/main/java/com/cafeflow/
         MyWorkflowImpl.java
         MyActivities.java
         MyActivitiesImpl.java
-        MyDTO.java              ← Workflow-specific DTOs go HERE, not in helpers/
+        MyDTO.java              ← FLAT in package. No sub-folders (no dto/, no model/).
     helpers/[category]/         ← Reusable framework helpers only
     core/                       ← Base classes, config, LLM clients
 ```
 
 - Worker registration → `application.yml` under `spring.temporal.workers`
-- Workflow DTOs → `workflows/[name]/` (NEVER in `helpers/`)
+- Workflow DTOs → `workflows/[name]/` FLAT (NEVER create `dto/`, `model/` sub-folders)
 - One workflow per package under `workflows/`
