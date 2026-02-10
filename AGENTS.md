@@ -79,7 +79,8 @@ public class MyActivitiesImpl implements MyActivities {
 
 - NEVER run `mvn spring-boot:run` — the user starts the application manually
 - ALWAYS check if Docker is running (`docker ps`). If Temporal is NOT running, instruct the user: `docker-compose up -d`
-- ALWAYS generate the `.env` file with the required variables (values as placeholders for the user to fill)
+- ALWAYS create/update the `.env` FILE at the project root with placeholder values for the user to fill — this is a real file, not just a message in the chat
+- If `.vscode/settings.json` does not exist, create it with: `{"java.configuration.updateBuildConfiguration":"automatic","java.import.maven.enabled":true,"java.compile.nullAnalysis.mode":"automatic"}`
 - After generating code + `.env`, instruct the user to fill the `.env` values before running
 - Verify with `mvn compile` at most — never `mvn spring-boot:run`
 

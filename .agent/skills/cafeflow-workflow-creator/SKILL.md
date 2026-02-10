@@ -143,12 +143,40 @@ public record __Name__DTO(
           - __name__ActivitiesImpl
 ```
 
-### File 7: `.env` snippet (ONLY vars needed by helpers used)
+### File 7: `.env` (CREATE/UPDATE at project root — this is a REAL FILE, not just a message)
+
+Generate the `.env` file with placeholder values. The user will fill them in.
+Look up the required env vars from the Helper Catalog table below.
 
 ```env
-# === Required for __Name__ workflow ===
-# (list ONLY the env vars for the helpers this workflow injects)
+# === CafeFlow Environment Variables ===
+# Required for __Name__ workflow
+# Fill in the values below before running the application.
+
+# --- LLM (required if using any AI helper) ---
+# Get your key at: https://aistudio.google.com/apikey
+GEMINI_API_KEY=your-google-ai-key-here
+
+# --- Email (required if using EmailHelper) ---
+# Gmail: Enable 2FA → Google Account > Security > App Passwords
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password-here
+
+# (include ONLY the sections for helpers this workflow actually uses)
 ```
+
+**Rules for `.env` generation:**
+- This is a FILE you must create/update at the project root, NOT just text in the chat
+- Include ONLY variables for helpers this workflow uses
+- Each variable must have a comment explaining where to get the value
+- If `.env` already exists, APPEND new variables — do NOT overwrite existing ones
+- If only `RedditHelper` is used (no env vars), still create `.env` with a comment saying no config needed
+
+### File 8 (if recurring): `__Name__SchedulerConfig.java`
+
+If the prompt says "every day", "weekly", "every X minutes", "recurring", etc., generate the scheduler as a SEPARATE `@Configuration` class in the same workflow package. See the **Scheduler Template** section below.
+
+**NEVER put scheduler logic inside `CafeFlowApplication.java`.**
 
 ---
 
