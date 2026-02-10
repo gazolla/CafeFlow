@@ -6,9 +6,9 @@ This file contains MANDATORY rules for generating code in this project.
 For detailed patterns, examples, and references, read `.agent/skills/`.
 
 Skill triggers:
-- "Create a workflow..." → `.agent/skills/cafeflow-workflow-creator/SKILL.md`
-- Docker/infrastructure → `.agent/skills/docker-spring-temporal/SKILL.md`
-- External APIs → `.agent/skills/external-service-integrator/SKILL.md`
+- "Create a workflow..." → `.agent/skills/cafeflow-workflow-creator/SKILL.md` (ALWAYS read this first)
+- Advanced Temporal (signals, queries, testing) → `.agent/skills/temporal-orchestrator/SKILL.md`
+- Recurring/scheduled workflows → `.agent/skills/temporal-scheduler/SKILL.md`
 
 ## Java Rules
 
@@ -77,9 +77,10 @@ public class MyActivitiesImpl implements MyActivities {
 
 ## Execution Rules
 
-- NEVER auto-run the application (`mvn spring-boot:run`, `docker-compose up`, etc.)
-- ONLY generate code and configuration files
-- Let the user start Docker and run the application manually
+- NEVER run `mvn spring-boot:run` — the user starts the application manually
+- ALWAYS check if Docker is running (`docker ps`). If Temporal is NOT running, instruct the user: `docker-compose up -d`
+- ALWAYS generate the `.env` file with the required variables (values as placeholders for the user to fill)
+- After generating code + `.env`, instruct the user to fill the `.env` values before running
 - Verify with `mvn compile` at most — never `mvn spring-boot:run`
 
 ## Configuration Rules
@@ -125,3 +126,13 @@ src/main/java/com/cafeflow/
 - Worker registration → `application.yml` under `spring.temporal.workers`
 - Workflow DTOs → `workflows/[name]/` FLAT (NEVER create `dto/`, `model/` sub-folders)
 - One workflow per package under `workflows/`
+
+## Creativity Rules
+
+- When ALL needed helpers ALREADY EXIST: follow the workflow template strictly. Do not deviate.
+- When a prompt needs a service with NO existing helper: create one. Follow the helper template in the skill.
+- When implementing a skeleton helper: implement the existing file. Do NOT create a duplicate.
+- When a prompt needs advanced Temporal patterns (signals, queries): consult temporal-orchestrator.
+- NEVER invent framework architecture. NEVER create controllers, REST endpoints, or new config classes.
+- NEVER generate docker-compose.yml or Dockerfile — these already exist in the repo.
+- ALWAYS prefer using an existing helper over creating a new one.
