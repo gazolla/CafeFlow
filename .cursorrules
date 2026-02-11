@@ -50,6 +50,7 @@ public record RedditPost(
 
 ```java
 // CORRECT WorkflowImpl
+@WorkflowImpl(workers = "MY_WORKER")
 public class MyWorkflowImpl implements MyWorkflow {
     private static final Logger log = Workflow.getLogger(MyWorkflowImpl.class);
     private final MyActivities activities = Workflow.newActivityStub(
@@ -58,8 +59,9 @@ public class MyWorkflowImpl implements MyWorkflow {
 }
 
 // CORRECT ActivityImpl
-@Component
 @Slf4j
+@Component
+@ActivityImpl(workers = "MY_WORKER")
 @RequiredArgsConstructor
 public class MyActivitiesImpl implements MyActivities {
     private final RedditHelper redditHelper;

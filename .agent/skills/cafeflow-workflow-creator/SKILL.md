@@ -8,6 +8,9 @@ This skill generates Temporal workflows that compose pre-built helpers.
 - **80% of requests**: Copy the templates below, substitute placeholders.
 - **20% of requests**: Create a new helper using the helper template, then use it in the workflow.
 
+> **GOLDEN EXAMPLE**: See `examples/reddit-to-email/` for a complete, working workflow.
+> When in doubt, copy that example and adapt it to the user's request.
+
 ---
 
 ## Workflow Template

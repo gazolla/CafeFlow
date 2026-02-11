@@ -28,7 +28,8 @@ mvnw.cmd
 build/
 
 ### VS Code ###
-.vscode/
+.vscode/*
+!.vscode/settings.json
 
 ### MacOS ###
 .DS_Store
