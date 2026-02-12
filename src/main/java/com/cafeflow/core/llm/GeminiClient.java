@@ -5,13 +5,13 @@ import java.net.http.HttpRequest;
 import java.util.List;
 
 public class GeminiClient extends BaseLLMClient {
-    private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
+    private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1/models/";
     private final String model;
     private final String endpointUrl;
 
     public GeminiClient(String apiKey, String model) {
         super(apiKey);
-        this.model = model != null ? model : "gemini-1.5-flash";
+        this.model = model != null && !model.isBlank() ? model : "gemini-2.0-flash";
         this.endpointUrl = "%s%s:generateContent?key=%s".formatted(BASE_URL, this.model, apiKey);
     }
 

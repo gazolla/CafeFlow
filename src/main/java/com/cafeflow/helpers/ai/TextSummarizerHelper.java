@@ -26,9 +26,20 @@ public class TextSummarizerHelper extends BaseHelper {
      */
     public String summarize(String text) {
         return executeWithProtection("summarize", () -> {
+            applyRateLimit();
             String prompt = "Summarize the following text in 2-3 concise sentences:\n\n" + text;
             return llmClient.send(prompt);
         });
+    }
+
+    private void applyRateLimit() {
+        try {
+            log.debug("Applying 1s delay for rate limiting...");
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Rate limit delay interrupted", e);
+        }
     }
 
     /**
@@ -36,6 +47,7 @@ public class TextSummarizerHelper extends BaseHelper {
      */
     public String summarize(String text, int maxSentences) {
         return executeWithProtection("summarize(" + maxSentences + ")", () -> {
+            applyRateLimit();
             String prompt = "Summarize the following text in exactly %d sentences:\n\n%s"
                     .formatted(maxSentences, text);
             return llmClient.send(prompt);
@@ -50,6 +62,7 @@ public class TextSummarizerHelper extends BaseHelper {
         return executeWithProtection("summarizeBatch", () -> {
             List<String> summaries = new ArrayList<>();
             for (String text : texts) {
+                applyRateLimit();
                 String prompt = "Summarize the following text in 2-3 concise sentences:\n\n" + text;
                 summaries.add(llmClient.send(prompt));
             }
@@ -62,6 +75,7 @@ public class TextSummarizerHelper extends BaseHelper {
      */
     public String summarizeToLanguage(String text, String targetLanguage) {
         return executeWithProtection("summarizeToLanguage(" + targetLanguage + ")", () -> {
+            applyRateLimit();
             String prompt = "Summarize the following text in 2-3 sentences. Write the summary in %s:\n\n%s"
                     .formatted(targetLanguage, text);
             return llmClient.send(prompt);

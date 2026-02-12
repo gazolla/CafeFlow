@@ -17,7 +17,7 @@ public class LLMConfig {
     @Value("${llm.gemini.api-key:}")
     private String geminiApiKey;
 
-    @Value("${llm.gemini.model:gemini-1.5-flash}")
+    @Value("${llm.gemini.model:gemini-2.0-flash}")
     private String geminiModel;
 
     @Value("${llm.groq.api-key:}")

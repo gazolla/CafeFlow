@@ -7,7 +7,7 @@ public class LLMClientFactory {
     }
 
     public static LLMClient createGeminiClient(String apiKey) {
-        return new GeminiClient(apiKey, "gemini-1.5-flash");
+        return new GeminiClient(apiKey, "gemini-2.0-flash");
     }
 
 }

@@ -1,7 +1,11 @@
+---
+name: cafeflow-workflow-creator
+description: Generates complete Temporal workflows, including interfaces, implementations, activities, DTOs, and configuration for the CafeFlow project. This is the primary skill for creating new workflows from a prompt.
+---
 # CafeFlow Workflow Creator
 
-> **MANDATORY**: Read `AGENTS.md` in the project root before generating any code.
-> It contains inviolable rules (Java records, Temporal determinism, execution, config) that override everything here.
+> **MANDATORY**: Before generating code, you must be familiar with the project's architectural rules located in the `../../rules/` directory.
+> Key rules include `temporal-determinism.md`, `java-best-practices.md`, and `configuration.md`. These override all other instructions.
 
 This skill generates Temporal workflows that compose pre-built helpers.
 
@@ -401,7 +405,7 @@ public class __Name__SchedulerConfig {
 }
 ```
 
-For advanced schedule patterns (calendar specs, overlap policies), see: `.agent/skills/temporal-scheduler/SKILL.md`
+For advanced schedule patterns (calendar specs, cron, overlap policies), see: `.agent/skills/temporal-scheduler/SKILL.md`
 
 ---
 

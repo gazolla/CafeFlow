@@ -54,7 +54,7 @@ llm:
   default-provider: ${LLM_DEFAULT_PROVIDER:gemini}
   gemini:
     api-key: ${GEMINI_API_KEY:}
-    model: ${GEMINI_MODEL:gemini-1.5-flash}
+    model: ${GEMINI_MODEL:gemini-2.0-flash}
   groq:
     api-key: ${GROQ_API_KEY:}
     model: ${GROQ_MODEL:llama-3.3-70b-versatile}
